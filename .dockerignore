@@ -1,0 +1,16 @@
+# Docker build context optimizations
+.git
+.gitignore
+.DS_Store
+logs
+__pycache__
+*.pyc
+**/.ipynb_checkpoints
+superset/superset.db
+
+# Local env
+.env
+
+# Editors/IDEs
+.vscode
+.idea
