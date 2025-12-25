@@ -37,6 +37,33 @@ ShipTrackerRT — полностью бесплатная и открытая с
 ## Быстрый старт
 
 ### 1. Клонируйте репозиторий
-```bash
-git clone https://github.com/yourusername/ShipTrackerRT.git
-cd ShipTrackerRT
+
+git commit -m "refactor: Restructure project architecture and consolidate configuration
+
+BREAKING CHANGES:
+- The logic of streamlit_app.py is divided into modules: streamlit.py, database.py, map_utils.py
+- Split db_init.py into: db_pool.py, ship_repository.py, ais_client.py, main.py
+- Reorganized project structure (dags/ -> app/, init_postgres -> collector/)
+- Consolidated config files into single root config.py
+- Removed redundant config re-exports
+
+Project Structure Changes:
+- Renamed 'dags/' to 'app/' (Streamlit web application)
+- Moved AIS collection code from 'init_postgres/' to 'collector/'
+- 'init_postgres/' now contains only SQL initialization files
+- All code split into logical modules following clean architecture
+
+Configuration:
+- Created unified config.py in project root
+- Removed duplicate DB_CONFIG definitions
+- load_dotenv() called only once
+- All modules import directly from root config.py
+
+Code Quality:
+- All comments have been improved
+- Improved code documentation
+- Better separation of concerns
+
+Docker:
+- Updated docker-compose.yaml paths
+- PYTHONPATH configured correctly"

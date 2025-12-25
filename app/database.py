@@ -51,7 +51,7 @@ async def init_database():
         await conn.close()
         
         if not exists:
-            st.warning("Таблицы БД не найдены. Убедитесь, что init_postgres.sql выполнен.")
+            st.warning("Database tables not found. Make sure init_postgres.sql is executed.")
             return False
             
         return True
