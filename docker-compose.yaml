@@ -154,6 +154,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
     volumes:
       - ./app:/app/app
+      - ./config.py:/app/config.py
       - ./logs:/app/logs
     depends_on:
       - postgres

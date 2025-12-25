@@ -1,4 +1,3 @@
-"""Client for connecting to AIS stream"""
 import websockets
 import json
 import asyncio
