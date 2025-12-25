@@ -9,6 +9,7 @@ websockets
 python-socketio
 
 psycopg2-binary
+asyncpg
 sqlalchemy
 alembic
 
@@ -31,3 +32,8 @@ jupyter
 ipykernel
 
 boto3
+
+streamlit
+streamlit-folium
+folium
+pandas

@@ -75,7 +75,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init_postgres/init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql
     restart: unless-stopped
     networks:
       - ship-tracer-network
@@ -136,6 +136,29 @@ services:
       /usr/bin/mc anonymous set download myminio/${MINIO_BUCKET:-ship-tracer-data} || true;
       exit 0;
       "
+    networks:
+      - ship-tracer-network
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ship-tracer-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
+    volumes:
+      - ./app:/app/app
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+    command: streamlit run /app/app/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
     networks:
       - ship-tracer-network
 
