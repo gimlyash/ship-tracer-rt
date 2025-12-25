@@ -1,6 +1,5 @@
 import websockets
 import json
-import asyncio
 from datetime import datetime, timezone
 
 from config import AIS_API_KEY, AIS_STREAM_URL, AIS_BOUNDING_BOXES
