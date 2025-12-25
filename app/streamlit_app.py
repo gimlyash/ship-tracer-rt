@@ -9,7 +9,6 @@ from config import DB_CONFIG
 from database import get_ship_positions, init_database
 from map_utils import create_map
 
-
 st.set_page_config(
     page_title="Ship Tracker RT",
     page_icon="🚢",
