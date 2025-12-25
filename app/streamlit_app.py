@@ -20,10 +20,9 @@ st.title("🚢 Ship Tracker RT - Real-Time Maritime Vessel Tracker")
 st.markdown("---")
 
 with st.sidebar:
-    st.header("⚙️ Настройки")
+    st.header("⚙️ Settings")
     
     refresh_interval = st.slider(
-        "Интервал обновления (секунды)",
         min_value=1,
         max_value=60,
         value=5,
@@ -31,7 +30,6 @@ with st.sidebar:
     )
     
     max_age_minutes = st.slider(
-        "Показывать суда, обновленные не позднее (минут назад)",
         min_value=1,
         max_value=60,
         value=30,
@@ -39,16 +37,16 @@ with st.sidebar:
     )
     
     # Refresh button
-    auto_refresh = st.checkbox("Автообновление", value=True)
+    auto_refresh = st.checkbox("Auto refresh", value=True)
     
-    if st.button("🔄 Обновить сейчас"):
+    if st.button("🔄 Refresh now"):
         st.rerun()
 
 
 def main():
     """Main application function"""
     # Get data from database
-    with st.spinner("Загрузка данных..."):
+    with st.spinner("Loading data..."):
         # Run asynchronous function
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -56,7 +54,7 @@ def main():
         # Check database initialization
         db_initialized = loop.run_until_complete(init_database())
         if not db_initialized:
-            st.error("База данных не инициализирована. Проверьте логи PostgreSQL.")
+            st.error("Database not initialized. Check PostgreSQL logs.")
             loop.close()
             return
         
@@ -67,27 +65,27 @@ def main():
     # Statistics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Всего судов", len(ship_positions))
+        st.metric("Total ships", len(ship_positions))
     with col2:
         if ship_positions:
             active_ships = len([
                 s for s in ship_positions 
                 if s['updated_at'] > datetime.now(timezone.utc) - timedelta(minutes=5)
             ])
-            st.metric("Активных (5 мин)", active_ships)
+            st.metric("Active (5 min)", active_ships)
         else:
-            st.metric("Активных (5 мин)", 0)
+            st.metric("Active (5 min)", 0)
     with col3:
         if ship_positions:
             avg_speed = sum([
                 float(s['speed_over_ground']) or 0 for s in ship_positions
             ]) / len(ship_positions)
-            st.metric("Средняя скорость", f"{avg_speed:.1f} узлов")
+            st.metric("Average speed", f"{avg_speed:.1f} knots")
         else:
-            st.metric("Средняя скорость", "0 узлов")
+            st.metric("Average speed", "0 knots")
     with col4:
         st.metric(
-            "Последнее обновление", 
+            "Last update", 
             datetime.now(timezone.utc).strftime("%H:%M:%S")
         )
     
@@ -99,23 +97,23 @@ def main():
         st_folium(map_obj, width=None, height=600)
         
         # Data table
-        with st.expander("📊 Таблица данных"):
+        with st.expander("📊 Data table"):
             df_data = []
             for row in ship_positions:
                 df_data.append({
                     'Ship ID': row['ship_id'],
-                    'Широта': f"{row['latitude']:.6f}",
-                    'Долгота': f"{row['longitude']:.6f}",
-                    'Курс (°)': row['course_over_ground'] or 'N/A',
-                    'Скорость (узлы)': row['speed_over_ground'] or 'N/A',
-                    'Направление (°)': row['heading'] or 'N/A',
-                    'Статус': row['navigational_status'] or 'N/A',
-                    'Обновлено': row['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if row['updated_at'] else 'N/A'
+                    'Latitude': f"{row['latitude']:.6f}",
+                    'Longitude': f"{row['longitude']:.6f}",
+                    'Course (°)': row['course_over_ground'] or 'N/A',
+                    'Speed (knots)': row['speed_over_ground'] or 'N/A',
+                    'Heading (°)': row['heading'] or 'N/A',
+                    'Status': row['navigational_status'] or 'N/A',
+                    'Updated': row['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if row['updated_at'] else 'N/A'
                 })
             df = pd.DataFrame(df_data)
             st.dataframe(df, use_container_width=True)
     else:
-        st.warning("⚠️ Нет данных о судах. Убедитесь, что скрипт сбора данных запущен.")
+        st.warning("⚠️ No ship data. Make sure the data collection script is running.")
         # Show empty map
         m = create_map([])
         st_folium(m, width=None, height=600)
