@@ -13,8 +13,6 @@ asyncpg
 sqlalchemy
 alembic
 
-redis
-
 geopy
 shapely
 pyproj
@@ -30,8 +28,6 @@ jinja2
 msgpack
 jupyter
 ipykernel
-
-boto3
 
 streamlit
 streamlit-folium

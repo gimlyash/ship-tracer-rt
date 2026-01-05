@@ -26,7 +26,6 @@ ShipTrackerRT — полностью бесплатная и открытая с
 
 - **Python** (asyncio, websockets, pandas, pydantic)
 - **PostgreSQL** + **pgAdmin**
-- **MinIO** (S3-совместимое хранилище)
 - **Streamlit** + **Folium** — реал-тайм карта на OpenStreetMap
 - **Apache Superset** — дашборды и аналитика
 - **Apache Airflow** — оркестрация задач

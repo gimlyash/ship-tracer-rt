@@ -1,4 +1,3 @@
-"""Database connection pool management"""
 import asyncpg
 from config import DB_CONFIG
 

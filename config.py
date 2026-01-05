@@ -13,7 +13,7 @@ DB_CONFIG = {
 }
 
 # AIS
-AIS_API_KEY = os.getenv("SECRET_KEY_SHIPAPI", "<YOUR API KEY>")
+AIS_API_KEY = os.getenv("SECRET_KEY_SHIPAPI")
 AIS_STREAM_URL = "wss://stream.aisstream.io/v0/stream"
 AIS_BOUNDING_BOXES = [[[-11, 178], [30, 74]]]
 

@@ -7,27 +7,12 @@ from ship_repository import save_ship_position
 from db_pool import init_db_pool, close_db_pool
 
 
-async def process_ais_message(message: dict, pool):
-    """Process single AIS message"""
-    message_type = message.get("MessageType")
-
-    if message_type == "PositionReport":
-        ais_message = message.get('Message', {}).get('PositionReport', {})
-        
-        if ais_message:
-            ship_id = ais_message.get('UserID')
-            lat = ais_message.get('Latitude')
-            lon = ais_message.get('Longitude')
-            
-            print(f"[{datetime.now(timezone.utc)}] ShipId: {ship_id} "
-                  f"Latitude: {lat} Longitude: {lon}")
-            
-            await save_ship_position(pool, ais_message, save_history=False)
-
-
 async def connect_ais_stream():
     """Connect to AIS stream and process messages"""
+    # Dictionary to store ship names (ship_id -> name)
+    ship_names = {}
     pool = await init_db_pool()
+    message_count = 0
     
     try:
         subscribe_message = {
@@ -42,7 +27,60 @@ async def connect_ais_stream():
             async for message_json in websocket:
                 try:
                     message = json.loads(message_json)
-                    await process_ais_message(message, pool)
+                    message_type = message.get("MessageType")
+                    
+                    # Handle ShipStaticData to get ship names
+                    if message_type == "ShipStaticData":
+                        static_data = message.get('Message', {}).get('ShipStaticData', {})
+                        ship_id = static_data.get('UserID')
+                        ship_name = static_data.get('Name', '').strip()
+                        if ship_id and ship_name:
+                            was_unknown = ship_id not in ship_names
+                            ship_names[ship_id] = ship_name
+                            if was_unknown:
+                                print(f"Got name for ShipID {ship_id}: {ship_name}")
+                    
+                    # Process PositionReport
+                    if message_type == "PositionReport":
+                        ais_message = message.get('Message', {}).get('PositionReport', {})
+                        
+                        if ais_message:
+                            message_count += 1
+                            
+                            # Extract data
+                            ship_id = ais_message.get('UserID')
+                            lat = ais_message.get('Latitude', 0)
+                            lon = ais_message.get('Longitude', 0)
+                            speed = ais_message.get('SpeedOverGround', None)
+                            course = ais_message.get('CourseOverGround', None)
+                            heading = ais_message.get('Heading', None)
+                            
+                            # Get ship name from cache
+                            ship_name = ship_names.get(ship_id, 'Unknown')
+                            
+                            # Format time
+                            time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                            
+                            # Build output string
+                            info_parts = []
+                            if speed is not None:
+                                info_parts.append(f"Speed: {speed:.1f} kn")
+                            if course is not None:
+                                info_parts.append(f"Course: {course:.1f}°")
+                            if heading is not None:
+                                info_parts.append(f"Heading: {heading:.1f}°")
+                            
+                            info_str = " | ".join(info_parts) if info_parts else ""
+                            
+                            # Print formatted output with ship name
+                            print(f"[{time_str}] #{message_count:4d} | ShipID: {ship_id:12d} | "
+                                  f"Name: {ship_name:20s} | "
+                                  f"Lat: {lat:8.5f}° | Lon: {lon:9.5f}°" + 
+                                  (f" | {info_str}" if info_str else ""))
+                            
+                            # Save to database
+                            await save_ship_position(pool, ais_message, save_history=False)
+                            
                 except json.JSONDecodeError as e:
                     print(f"JSON parsing error: {e}")
                 except Exception as e:
