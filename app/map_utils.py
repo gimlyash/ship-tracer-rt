@@ -5,7 +5,6 @@ from typing import List, Dict
 def create_map(ship_positions: List[Dict]) -> folium.Map:
  
     if not ship_positions:
-        # If no data, show default map (Singapore)
         m = folium.Map(
             location=[1.3521, 103.8198],
             zoom_start=10,
@@ -13,21 +12,18 @@ def create_map(ship_positions: List[Dict]) -> folium.Map:
         )
         return m
     
-    # Calculate map center based on ship positions
     lats = [float(row['latitude']) for row in ship_positions]
     lons = [float(row['longitude']) for row in ship_positions]
     
     center_lat = sum(lats) / len(lats) if lats else 1.3521
     center_lon = sum(lons) / len(lons) if lons else 103.8198
     
-    # Create map
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=10,
         tiles='OpenStreetMap'
     )
     
-    # Add markers for each ship
     for row in ship_positions:
         ship_id = row['ship_id']
         lat = float(row['latitude'])
@@ -38,7 +34,6 @@ def create_map(ship_positions: List[Dict]) -> folium.Map:
         status = row['navigational_status']
         timestamp = row['timestamp']
         
-        # Create popup with ship information
         popup_html = f"""
         <div style="font-family: Arial; min-width: 200px;">
             <h4>🚢 Ship ID: {ship_id}</h4>
@@ -55,7 +50,6 @@ def create_map(ship_positions: List[Dict]) -> folium.Map:
         </div>
         """
         
-        # Ship icon with direction consideration
         icon_color = 'blue'
         if heading:
             icon = folium.Icon(
@@ -71,7 +65,6 @@ def create_map(ship_positions: List[Dict]) -> folium.Map:
                 color=icon_color
             )
         
-        # Add marker
         folium.Marker(
             location=[lat, lon],
             popup=folium.Popup(popup_html, max_width=300),

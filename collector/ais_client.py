@@ -29,7 +29,6 @@ async def connect_ais_stream():
                     message = json.loads(message_json)
                     message_type = message.get("MessageType")
                     
-                    # Handle ShipStaticData to get ship names
                     if message_type == "ShipStaticData":
                         static_data = message.get('Message', {}).get('ShipStaticData', {})
                         ship_id = static_data.get('UserID')
@@ -40,14 +39,12 @@ async def connect_ais_stream():
                             if was_unknown:
                                 print(f"Got name for ShipID {ship_id}: {ship_name}")
                     
-                    # Process PositionReport
                     if message_type == "PositionReport":
                         ais_message = message.get('Message', {}).get('PositionReport', {})
                         
                         if ais_message:
                             message_count += 1
                             
-                            # Extract data
                             ship_id = ais_message.get('UserID')
                             lat = ais_message.get('Latitude', 0)
                             lon = ais_message.get('Longitude', 0)
@@ -55,13 +52,10 @@ async def connect_ais_stream():
                             course = ais_message.get('CourseOverGround', None)
                             heading = ais_message.get('Heading', None)
                             
-                            # Get ship name from cache
                             ship_name = ship_names.get(ship_id, 'Unknown')
                             
-                            # Format time
                             time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
                             
-                            # Build output string
                             info_parts = []
                             if speed is not None:
                                 info_parts.append(f"Speed: {speed:.1f} kn")
@@ -72,13 +66,11 @@ async def connect_ais_stream():
                             
                             info_str = " | ".join(info_parts) if info_parts else ""
                             
-                            # Print formatted output with ship name
                             print(f"[{time_str}] #{message_count:4d} | ShipID: {ship_id:12d} | "
                                   f"Name: {ship_name:20s} | "
                                   f"Lat: {lat:8.5f}° | Lon: {lon:9.5f}°" + 
                                   (f" | {info_str}" if info_str else ""))
                             
-                            # Save to database
                             await save_ship_position(pool, ais_message, save_history=False)
                             
                 except json.JSONDecodeError as e:
