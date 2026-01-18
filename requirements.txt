@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 pydantic
-
+python-dotenv
 httpx
 aiohttp
 
@@ -23,7 +23,6 @@ pytz
 loguru
 
 python-multipart
-python-dotenv
 jinja2
 msgpack
 jupyter

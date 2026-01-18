@@ -1,36 +1,4 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ship-tracer-app
-    ports:
-      - "8000:8000"
-    environment:
-      # Локальная база данных (по умолчанию используется локальный контейнер)
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-shiptracer}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
-      
-      # Общие настройки
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - SECRET_KEY=${SECRET_KEY:-}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      
-      # Облачные настройки (раскомментируйте и используйте вместо локальных):
-      # - DATABASE_URL=${DATABASE_URL}
-      # - POSTGRES_HOST=${POSTGRES_HOST}
-      # - POSTGRES_PORT=${POSTGRES_PORT}
-    volumes:
-      - ./:/app
-      - ./logs:/app/logs
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    networks:
-      - ship-tracer-network
-
   postgres:
     image: postgres:15-alpine
     container_name: ship-tracer-postgres
@@ -81,8 +49,7 @@ services:
     ports:
       - "8088:8088"
     environment:
-      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY}
-      - SUPERSET_CONFIG_PATH=/app/superset_config.py
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-change-me-in-production-min-32-chars}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-shiptracer}

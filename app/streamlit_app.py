@@ -23,6 +23,7 @@ with st.sidebar:
     st.header("⚙️ Settings")
     
     refresh_interval = st.slider(
+        label="Refresh interval (seconds)",
         min_value=1,
         max_value=60,
         value=5,
@@ -30,6 +31,7 @@ with st.sidebar:
     )
     
     max_age_minutes = st.slider(
+        label="Max age (minutes)",
         min_value=1,
         max_value=60,
         value=30,
