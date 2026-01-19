@@ -9,7 +9,6 @@ from db_pool import init_db_pool, close_db_pool
 
 async def connect_ais_stream():
     """Connect to AIS stream and process messages"""
-    # Dictionary to store ship names (ship_id -> name)
     ship_names = {}
     pool = await init_db_pool()
     message_count = 0
@@ -48,16 +47,19 @@ async def connect_ais_stream():
                             ship_id = ais_message.get('UserID')
                             lat = ais_message.get('Latitude', 0)
                             lon = ais_message.get('Longitude', 0)
-                            speed = ais_message.get('SpeedOverGround', None)
-                            course = ais_message.get('CourseOverGround', None)
-                            heading = ais_message.get('Heading', None)
+                            
+                            speed = ais_message.get('Sog', None)
+                            course = ais_message.get('Cog', None)
+                            true_heading = ais_message.get('TrueHeading', None)
+                            
+                            heading = None if (true_heading is None or true_heading == 511) else true_heading
                             
                             ship_name = ship_names.get(ship_id, 'Unknown')
                             
                             time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
                             
                             info_parts = []
-                            if speed is not None:
+                            if speed is not None and speed > 0:
                                 info_parts.append(f"Speed: {speed:.1f} kn")
                             if course is not None:
                                 info_parts.append(f"Course: {course:.1f}°")

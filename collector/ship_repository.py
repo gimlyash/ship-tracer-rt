@@ -8,9 +8,12 @@ async def upsert_ship_position(conn: asyncpg.Connection, ship_data: dict):
     ship_id = ship_data.get('UserID')
     latitude = ship_data.get('Latitude')
     longitude = ship_data.get('Longitude')
-    course_over_ground = ship_data.get('CourseOverGround')
-    speed_over_ground = ship_data.get('SpeedOverGround')
-    heading = ship_data.get('Heading')
+    
+    course_over_ground = ship_data.get('Cog', None)
+    speed_over_ground = ship_data.get('Sog', None)
+    true_heading = ship_data.get('TrueHeading', None)
+    heading = None if (true_heading is None or true_heading == 511) else true_heading
+    
     navigational_status = ship_data.get('NavigationalStatus')
     rate_of_turn = ship_data.get('RateOfTurn')
     timestamp = datetime.now(timezone.utc)
@@ -47,9 +50,14 @@ async def insert_history_position(conn: asyncpg.Connection, ship_data: dict):
     ship_id = ship_data.get('UserID')
     latitude = ship_data.get('Latitude')
     longitude = ship_data.get('Longitude')
-    course_over_ground = ship_data.get('CourseOverGround')
-    speed_over_ground = ship_data.get('SpeedOverGround')
-    heading = ship_data.get('Heading')
+    
+    # Правильные названия полей в AIS API: Sog, Cog, TrueHeading
+    course_over_ground = ship_data.get('Cog', None)
+    speed_over_ground = ship_data.get('Sog', None)
+    true_heading = ship_data.get('TrueHeading', None)
+    # TrueHeading = 511 означает "недоступно" в AIS
+    heading = None if (true_heading is None or true_heading == 511) else true_heading
+    
     navigational_status = ship_data.get('NavigationalStatus')
     rate_of_turn = ship_data.get('RateOfTurn')
     timestamp = datetime.now(timezone.utc)
