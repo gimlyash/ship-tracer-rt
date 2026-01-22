@@ -1,6 +1,7 @@
 """Repository for working with ship data in database"""
 import asyncpg
 from datetime import datetime, timezone
+from loguru import logger
 
 
 async def upsert_ship_position(conn: asyncpg.Connection, ship_data: dict):
@@ -87,5 +88,5 @@ async def save_ship_position(pool, ship_data: dict, save_history: bool = False):
             if save_history:
                 await insert_history_position(conn, ship_data)
     except Exception as e:
-        print(f"Error saving to database: {e}")
+        logger.error(f"Error saving to database: {e}")
 

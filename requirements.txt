@@ -21,6 +21,7 @@ python-dateutil
 pytz
 
 loguru
+orjson
 
 python-multipart
 jinja2
