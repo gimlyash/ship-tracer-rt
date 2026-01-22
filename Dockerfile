@@ -10,7 +10,8 @@ RUN dnf install -y python3.11 python3.11-pip \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip3.11 install --no-cache-dir -r requirements.txt
+RUN pip3.11 install --upgrade pip --default-timeout=100 && \
+    pip3.11 install --no-cache-dir --default-timeout=300 -r requirements.txt
 
 COPY . .
 
