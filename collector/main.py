@@ -1,5 +1,5 @@
 import asyncio
-from ais_client import connect_ais_stream
+from collector.ais_client import connect_ais_stream
 
 
 def main():

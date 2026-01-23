@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS ship_positions_current (
     course_over_ground DOUBLE PRECISION,
     speed_over_ground DOUBLE PRECISION,
     heading INTEGER,
-    navigational_status VARCHAR(50),
+    navigational_status INTEGER,
     rate_of_turn DOUBLE PRECISION,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ship_positions_history (
     course_over_ground DOUBLE PRECISION,
     speed_over_ground DOUBLE PRECISION,
     heading INTEGER,
-    navigational_status VARCHAR(50),
+    navigational_status INTEGER,
     rate_of_turn DOUBLE PRECISION,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );

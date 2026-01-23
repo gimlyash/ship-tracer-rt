@@ -20,6 +20,32 @@ services:
       timeout: 5s
       retries: 5
 
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ship-tracer-collector
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
+      - SECRET_KEY_SHIPAPI=${SECRET_KEY_SHIPAPI}
+      - AIS_LOG_STATS_INTERVAL=${AIS_LOG_STATS_INTERVAL:-5}
+      - AIS_LOG_DETAILED=${AIS_LOG_DETAILED:-false}
+    volumes:
+      - ./collector:/app/collector
+      - ./config.py:/app/config.py
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: python3.11 -m collector.main
+    restart: unless-stopped
+    networks:
+      - ship-tracer-network
+
   streamlit:
     build:
       context: .
@@ -29,7 +55,7 @@ services:
       - "8501:8501"
     environment:
       - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5433
+      - POSTGRES_PORT=5432
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
@@ -39,6 +65,24 @@ services:
     depends_on:
       - postgres
     command: streamlit run /app/app/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - ship-tracer-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ship-tracer-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=True
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ship-tracer-network
@@ -54,7 +98,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
       - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5433
+      - POSTGRES_PORT=5432
     volumes:
       - superset_data:/app/superset_home
     depends_on:
@@ -73,6 +117,7 @@ services:
 
 volumes:
   postgres_data:
+  pgadmin_data:
   superset_data:
 
 networks:

@@ -8,7 +8,7 @@ if env_file.exists():
 
 DB_CONFIG = {
     "host": os.getenv("POSTGRES_HOST", "postgres"),
-    "port": int(os.getenv("POSTGRES_PORT", "5433")),
+    "port": int(os.getenv("POSTGRES_PORT", "5432")),
     "user": os.getenv("POSTGRES_USER", "postgres"),
     "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
     "database": os.getenv("POSTGRES_DB", "shiptracer"),

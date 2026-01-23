@@ -13,8 +13,8 @@ except ImportError:
     logger.warning("orjson not installed, using standard json library. Install orjson for better performance.")
 
 from config import AIS_API_KEY, AIS_STREAM_URL, AIS_BOUNDING_BOXES, AIS_LOG_STATS_INTERVAL, AIS_LOG_DETAILED
-from ship_repository import save_ship_position
-from db_pool import init_db_pool, close_db_pool
+from collector.ship_repository import save_ship_position
+from collector.db_pool import init_db_pool, close_db_pool
 
 logger.remove()
 logger.add(
