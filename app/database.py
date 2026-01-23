@@ -1,9 +1,14 @@
 import asyncpg
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
-import streamlit as st
 
 from config import DB_CONFIG
+
+# Try to import streamlit, but don't fail if not available
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 
 
 async def get_ship_positions(max_age_minutes: int = 30) -> List:
@@ -32,7 +37,12 @@ async def get_ship_positions(max_age_minutes: int = 30) -> List:
         
         return rows
     except Exception as e:
-        st.error(f"Database connection error: {e}")
+        # Try to use streamlit if available, otherwise just print
+        try:
+            import streamlit as st
+            st.error(f"Database connection error: {e}")
+        except ImportError:
+            print(f"Database connection error: {e}")
         return []
 
 
@@ -51,11 +61,17 @@ async def init_database():
         await conn.close()
         
         if not exists:
-            st.warning("Database tables not found. Make sure init_postgres.sql is executed.")
+            if st:
+                st.warning("Database tables not found. Make sure init_postgres.sql is executed.")
+            else:
+                print("Database tables not found. Make sure init_postgres.sql is executed.")
             return False
             
         return True
     except Exception as e:
-        st.error(f"Database initialization error: {e}")
+        if st:
+            st.error(f"Database initialization error: {e}")
+        else:
+            print(f"Database initialization error: {e}")
         return False
 

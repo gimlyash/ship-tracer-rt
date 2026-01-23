@@ -1,14 +1,14 @@
 """FastAPI server with WebSocket for real-time ship position updates"""
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 import asyncio
 import json
 from datetime import datetime, timezone, timedelta
 from typing import List
-import asyncpg
+
+# Imports from project root (PYTHONPATH=/app in Docker)
 from config import DB_CONFIG
-from database import get_ship_positions
+from app.database import get_ship_positions
 
 app = FastAPI(title="Ship Tracker RT API")
 
@@ -130,7 +130,17 @@ async def get_index():
         function updateMap(data) {
             // Update statistics
             document.getElementById('total').textContent = data.ships.length;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+            
+            // Visual feedback that update happened
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.textContent = 'Connected • Updated';
+                setTimeout(() => {
+                    statusEl.textContent = 'Connected';
+                }, 500);
+            }
             
             // Update markers
             const currentShipIds = new Set();
@@ -143,8 +153,18 @@ async def get_index():
                 const lon = ship.longitude;
                 
                 if (markers[shipId]) {
-                    // Update existing marker position
+                    // Update existing marker position and popup
                     markers[shipId].setLatLng([lat, lon]);
+                    // Update popup with latest data
+                    const popup = `
+                        <b>🚢 Ship ID: ${shipId}</b><br>
+                        Lat: ${lat.toFixed(6)}<br>
+                        Lon: ${lon.toFixed(6)}<br>
+                        ${ship.course_over_ground ? `Course: ${ship.course_over_ground.toFixed(1)}°<br>` : ''}
+                        ${ship.speed_over_ground ? `Speed: ${ship.speed_over_ground.toFixed(1)} kn<br>` : ''}
+                        ${ship.heading ? `Heading: ${ship.heading}°<br>` : ''}
+                    `;
+                    markers[shipId].setPopupContent(popup);
                 } else {
                     // Create new marker
                     const popup = `
@@ -212,26 +232,34 @@ async def websocket_endpoint(websocket: WebSocket):
         
         # Keep connection alive and send periodic updates
         while True:
-            await asyncio.sleep(2)  # Update every 2 seconds
+            await asyncio.sleep(1)  # Update every 1 second for real-time updates
             
-            positions = await get_ship_positions(max_age_minutes=30)
-            await websocket.send_json({
-                "type": "update",
-                "ships": [
-                    {
-                        "ship_id": p["ship_id"],
-                        "latitude": float(p["latitude"]),
-                        "longitude": float(p["longitude"]),
-                        "course_over_ground": float(p["course_over_ground"]) if p["course_over_ground"] else None,
-                        "speed_over_ground": float(p["speed_over_ground"]) if p["speed_over_ground"] else None,
-                        "heading": int(p["heading"]) if p["heading"] else None,
-                    }
-                    for p in positions
-                ],
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
+            try:
+                positions = await get_ship_positions(max_age_minutes=30)
+                await websocket.send_json({
+                    "type": "update",
+                    "ships": [
+                        {
+                            "ship_id": p["ship_id"],
+                            "latitude": float(p["latitude"]),
+                            "longitude": float(p["longitude"]),
+                            "course_over_ground": float(p["course_over_ground"]) if p["course_over_ground"] else None,
+                            "speed_over_ground": float(p["speed_over_ground"]) if p["speed_over_ground"] else None,
+                            "heading": int(p["heading"]) if p["heading"] else None,
+                        }
+                        for p in positions
+                    ],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+            except Exception as e:
+                # Log error but continue
+                print(f"Error sending update: {e}")
+                await asyncio.sleep(1)
             
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
 
