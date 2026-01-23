@@ -9,8 +9,7 @@ from config import DB_CONFIG
 from database import get_ship_positions, init_database
 from map_utils import create_map
 
-# Cache database connection check
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300) 
 def check_db_initialized():
     """Check if database is initialized (cached)"""
     loop = asyncio.new_event_loop()
@@ -32,13 +31,17 @@ st.markdown("---")
 with st.sidebar:
     st.header("⚙️ Settings")
     
+    auto_refresh = st.checkbox("Auto refresh", value=False, key="auto_refresh")
+    
     refresh_interval = st.slider(
         label="Refresh interval (seconds)",
         min_value=3,
         max_value=60,
-        value=5,
+        value=10,
         step=1,
-        key="refresh_interval"
+        key="refresh_interval",
+        disabled=not auto_refresh,
+        help="How often to automatically refresh the map"
     )
     
     max_age_minutes = st.slider(
@@ -47,12 +50,14 @@ with st.sidebar:
         max_value=60,
         value=30,
         step=1,
-        key="max_age_minutes"
+        key="max_age_minutes",
+        help="Show only ships updated within this time"
     )
     
-    auto_refresh = st.checkbox("Auto refresh", value=True, key="auto_refresh")
+    st.markdown("---")
+    st.info(f"**Current settings:**\n- Auto refresh: {'ON' if auto_refresh else 'OFF'}\n- Interval: {refresh_interval}s\n- Max age: {max_age_minutes}min")
     
-    if st.button("🔄 Refresh now"):
+    if st.button("🔄 Refresh now", use_container_width=True):
         st.rerun()
 
 
@@ -99,17 +104,14 @@ def main(refresh_interval: int, max_age_minutes: int, auto_refresh: bool):
     
     st.markdown("---")
     
-    # Create and display map with unique key for smooth updates
-    map_container = st.empty()
-    with map_container.container():
-        if ship_positions:
-            map_obj = create_map(ship_positions)
-            # Unique key based on timestamp to force map update
-            st_folium(map_obj, width=None, height=600, key=f"map_{int(datetime.now().timestamp())}")
-        else:
-            st.warning("⚠️ No ship data. Make sure the data collection script is running.")
-            m = create_map([])
-            st_folium(m, width=None, height=600)
+    # Create and display map (without container to avoid darkening)
+    if ship_positions:
+        map_obj = create_map(ship_positions)
+        st_folium(map_obj, width=None, height=600, key="ship_map")
+    else:
+        st.warning("⚠️ No ship data. Make sure the data collection script is running.")
+        m = create_map([])
+        st_folium(m, width=None, height=600, key="ship_map")
     
     # Data table
     if ship_positions:
@@ -129,6 +131,7 @@ def main(refresh_interval: int, max_age_minutes: int, auto_refresh: bool):
             df = pd.DataFrame(df_data)
             st.dataframe(df, use_container_width=True)
     
+    # Auto refresh only if enabled
     if auto_refresh:
         time.sleep(refresh_interval)
         st.rerun()
