@@ -9,6 +9,16 @@ from config import DB_CONFIG
 from database import get_ship_positions, init_database
 from map_utils import create_map
 
+# Cache database connection check
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def check_db_initialized():
+    """Check if database is initialized (cached)"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(init_database())
+    loop.close()
+    return result
+
 st.set_page_config(
     page_title="Ship Tracker RT",
     page_icon="🚢",
@@ -24,10 +34,11 @@ with st.sidebar:
     
     refresh_interval = st.slider(
         label="Refresh interval (seconds)",
-        min_value=1,
+        min_value=3,
         max_value=60,
         value=5,
-        step=1
+        step=1,
+        key="refresh_interval"
     )
     
     max_age_minutes = st.slider(
@@ -35,32 +46,27 @@ with st.sidebar:
         min_value=1,
         max_value=60,
         value=30,
-        step=1
+        step=1,
+        key="max_age_minutes"
     )
     
-    # Refresh button
-    auto_refresh = st.checkbox("Auto refresh", value=True)
+    auto_refresh = st.checkbox("Auto refresh", value=True, key="auto_refresh")
     
     if st.button("🔄 Refresh now"):
         st.rerun()
 
 
-def main():
+def main(refresh_interval: int, max_age_minutes: int, auto_refresh: bool):
     """Main application function"""
-    # Get data from database
+
+    if not check_db_initialized():
+        st.error("Database not initialized. Check PostgreSQL logs.")
+        return
+    
+    # Get data from database (with short cache)
     with st.spinner("Loading data..."):
-        # Run asynchronous function
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        
-        # Check database initialization
-        db_initialized = loop.run_until_complete(init_database())
-        if not db_initialized:
-            st.error("Database not initialized. Check PostgreSQL logs.")
-            loop.close()
-            return
-        
-        # Get ship positions
         ship_positions = loop.run_until_complete(get_ship_positions(max_age_minutes))
         loop.close()
     
@@ -93,12 +99,20 @@ def main():
     
     st.markdown("---")
     
-    # Create and display map
+    # Create and display map with unique key for smooth updates
+    map_container = st.empty()
+    with map_container.container():
+        if ship_positions:
+            map_obj = create_map(ship_positions)
+            # Unique key based on timestamp to force map update
+            st_folium(map_obj, width=None, height=600, key=f"map_{int(datetime.now().timestamp())}")
+        else:
+            st.warning("⚠️ No ship data. Make sure the data collection script is running.")
+            m = create_map([])
+            st_folium(m, width=None, height=600)
+    
+    # Data table
     if ship_positions:
-        map_obj = create_map(ship_positions)
-        st_folium(map_obj, width=None, height=600)
-        
-        # Data table
         with st.expander("📊 Data table"):
             df_data = []
             for row in ship_positions:
@@ -114,17 +128,12 @@ def main():
                 })
             df = pd.DataFrame(df_data)
             st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("⚠️ No ship data. Make sure the data collection script is running.")
-        # Show empty map
-        m = create_map([])
-        st_folium(m, width=None, height=600)
     
-    # Auto refresh
     if auto_refresh:
         time.sleep(refresh_interval)
         st.rerun()
 
 
 if __name__ == "__main__":
-    main()
+    # Call main with parameters from sidebar
+    main(refresh_interval, max_age_minutes, auto_refresh)
