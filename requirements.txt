@@ -26,6 +26,7 @@ orjson
 python-multipart
 jinja2
 msgpack
+requests
 jupyter
 ipykernel
 

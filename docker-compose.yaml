@@ -90,7 +90,9 @@ services:
       - ship-tracer-network
 
   superset:
-    image: apache/superset:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
     container_name: ship-tracer-superset
     ports:
       - "8088:8088"
@@ -114,6 +116,35 @@ services:
       superset run -h 0.0.0.0 -p 8088 --with-threads --reload --debugger
       "
     restart: unless-stopped
+    networks:
+      - ship-tracer-network
+
+  superset-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ship-tracer-superset-init
+    environment:
+      - SUPERSET_URL=http://superset:8088
+      - SUPERSET_USERNAME=admin
+      - SUPERSET_PASSWORD=admin
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-shiptracer}
+    volumes:
+      - ./scripts:/app/scripts
+    depends_on:
+      superset:
+        condition: service_started
+    command: >
+      sh -c "
+      echo '⏳ Ожидание готовности Superset...' &&
+      sleep 30 &&
+      python3.11 /app/scripts/setup_superset_db.py
+      "
+    restart: "no"
     networks:
       - ship-tracer-network
 
