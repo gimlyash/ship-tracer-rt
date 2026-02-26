@@ -1,220 +1,220 @@
 # ShipTrackerRT — Real-Time Maritime Vessel Tracker
 
-Полностью бесплатная и открытая система для отслеживания морских судов в реальном времени с использованием публичных данных AIS (Automatic Identification System).
+A completely free and open-source system for tracking maritime vessels in real-time using public AIS (Automatic Identification System) data.
 
-## 🚀 Возможности
+## 🚀 Features
 
-- **Real-time обновление позиций** — обновление каждую секунду через WebSocket без перезагрузки страницы
-- **Интерактивная карта** — Leaflet карта с маркерами кораблей и popup-информацией
-- **Высокая производительность** — оптимизированный парсинг JSON (orjson), асинхронная обработка
-- **Фильтрация по региону** — настраиваемые bounding boxes для выбора интересующего региона
-- **Хранение данных** — PostgreSQL для текущих позиций и истории
-- **Веб-интерфейс управления БД** — pgAdmin для удобной работы с данными
-- **Аналитические дашборды** — Apache Superset для визуализации и анализа
-- **Полная контейнеризация** — Docker Compose для простого развертывания
+- **Real-time position updates** — updates every second via WebSocket without page reload
+- **Interactive map** — Leaflet map with ship markers and popup information
+- **High performance** — optimized JSON parsing (orjson), asynchronous processing
+- **Region filtering** — configurable bounding boxes for selecting regions of interest
+- **Data storage** — PostgreSQL for current positions and history
+- **Database management web interface** — pgAdmin for convenient data management
+- **Analytics dashboards** — Apache Superset for visualization and analysis
+- **Full containerization** — Docker Compose for easy deployment
 
-## 🛠 Технологический стек
+## 🛠 Tech Stack
 
 - **Backend:**
   - Python 3.11 (asyncio, websockets)
-  - FastAPI + WebSocket для real-time обновлений
-  - orjson для быстрого парсинга JSON (+20-50% производительности)
-  - asyncpg для асинхронной работы с PostgreSQL
-  - loguru для структурированного логирования
+  - FastAPI + WebSocket for real-time updates
+  - orjson for fast JSON parsing (+20-50% performance boost)
+  - asyncpg for asynchronous PostgreSQL operations
+  - loguru for structured logging
 
 - **Database:**
   - PostgreSQL 15
-  - pgAdmin 4 для управления БД
+  - pgAdmin 4 for database management
 
 - **Frontend:**
   - HTML5 + JavaScript
-  - Leaflet для интерактивных карт
-  - WebSocket для real-time обновлений
+  - Leaflet for interactive maps
+  - WebSocket for real-time updates
 
 - **Analytics:**
-  - Apache Superset для дашбордов
+  - Apache Superset for dashboards
 
 - **Infrastructure:**
   - Docker & Docker Compose
-  - Все сервисы контейнеризированы
+  - All services are containerized
 
-## 📋 Требования
+## 📋 Requirements
 
-- Docker и Docker Compose
-- AIS API ключ от [aisstream.io](https://aisstream.io) (бесплатный)
+- Docker and Docker Compose
+- AIS API key from [aisstream.io](https://aisstream.io) (free)
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### 1. Клонируйте репозиторий
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd ship-tracer-rt
 ```
 
-### 2. Настройте переменные окружения
+### 2. Configure environment variables
 
-Создайте файл `.env` на основе `.env-example`:
+Create a `.env` file based on `.env-example`:
 
 ```bash
 cp .env-example .env
 ```
 
-Отредактируйте `.env` и укажите:
-- `SECRET_KEY_SHIPAPI` — ваш API ключ от aisstream.io
-- `POSTGRES_PASSWORD` — пароль для PostgreSQL (опционально)
-- `PG_ADMIN_WEB_EMAIL` и `PG_ADMIN_WEB_PASSWORD` — учетные данные для pgAdmin (опционально)
+Edit `.env` and specify:
+- `SECRET_KEY_SHIPAPI` — your API key from aisstream.io
+- `POSTGRES_PASSWORD` — PostgreSQL password (optional)
+- `PG_ADMIN_WEB_EMAIL` and `PG_ADMIN_WEB_PASSWORD` — pgAdmin credentials (optional)
 
-### 3. Запустите проект
+### 3. Start the project
 
 ```bash
 docker-compose up -d
 ```
 
-### 4. Дождитесь инициализации (30-60 секунд)
+### 4. Wait for initialization (30-60 seconds)
 
-Superset автоматически настроит подключение к PostgreSQL. Проверьте логи:
+Superset will automatically configure the PostgreSQL connection. Check the logs:
 ```bash
 docker logs ship-tracer-superset-init -f
 ```
 
-### 5. Откройте веб-интерфейс
+### 5. Open the web interface
 
-- **Real-time карта:** http://localhost:8000
-- **pgAdmin (управление БД):** http://localhost:5050
-- **Superset (аналитика):** http://localhost:8088
+- **Real-time map:** http://localhost:8000
+- **pgAdmin (DB management):** http://localhost:5050
+- **Superset (analytics):** http://localhost:8088
   - Username: `admin`
   - Password: `admin`
 
-## 📡 Порты и сервисы
+## 📡 Ports and Services
 
-| Сервис | Порт | Описание |
-|--------|------|----------|
-| API (FastAPI) | 8000 | Веб-интерфейс с real-time картой |
-| PostgreSQL | 5433 | База данных (внешний доступ) |
-| pgAdmin | 5050 | Веб-интерфейс управления БД |
-| Superset | 8088 | Аналитические дашборды |
+| Service | Port | Description |
+|---------|------|-------------|
+| API (FastAPI) | 8000 | Web interface with real-time map |
+| PostgreSQL | 5433 | Database (external access) |
+| pgAdmin | 5050 | Database management web interface |
+| Superset | 8088 | Analytics dashboards |
 
-**Примечание:** Порт 5433 используется для внешнего доступа к PostgreSQL (чтобы не конфликтовать с локальным PostgreSQL на 5432). Внутри Docker-сети все сервисы используют порт 5432.
+**Note:** Port 5433 is used for external access to PostgreSQL (to avoid conflicts with local PostgreSQL on 5432). Inside the Docker network, all services use port 5432.
 
-## 🔧 Настройка
+## 🔧 Configuration
 
-### Настройка региона отслеживания
+### Configuring tracking region
 
-Отредактируйте `config.py`:
+Edit `config.py`:
 
 ```python
 AIS_BOUNDING_BOXES = [[[min_lat, min_lon], [max_lat, max_lon]]]
 ```
 
-Пример для Сингапура и окрестностей:
+Example for Singapore and surrounding areas:
 ```python
 AIS_BOUNDING_BOXES = [[[-11, 178], [30, 74]]]
 ```
 
-### Настройка логирования
+### Logging configuration
 
-В `.env` можно настроить:
+In `.env` you can configure:
 
 ```bash
-AIS_LOG_STATS_INTERVAL=5      # Интервал статистики в секундах
-AIS_LOG_DETAILED=false        # Детальное логирование каждого сообщения
+AIS_LOG_STATS_INTERVAL=5      # Statistics interval in seconds
+AIS_LOG_DETAILED=false        # Detailed logging for each message
 ```
 
-## 📊 Структура проекта
+## 📊 Project Structure
 
 ```
 ship-tracer-rt/
-├── app/                    # Веб-приложение
-│   ├── api_server.py      # FastAPI сервер с WebSocket
-│   ├── database.py        # Работа с БД
-│   └── map_utils.py       # Утилиты для карт
-├── collector/             # Сбор данных AIS
-│   ├── ais_client.py      # Клиент AIS потока
-│   ├── ship_repository.py # Сохранение в БД
-│   ├── db_pool.py         # Пул соединений БД
-│   └── main.py            # Точка входа
-├── init_postgres/         # SQL скрипты
-│   ├── init_postgres.sql  # Инициализация БД
-│   └── migrate_*.sql     # Миграции
-├── test/                  # Тесты и эксперименты
+├── app/                    # Web application
+│   ├── api_server.py      # FastAPI server with WebSocket
+│   ├── database.py        # Database operations
+│   └── map_utils.py       # Map utilities
+├── collector/             # AIS data collection
+│   ├── ais_client.py      # AIS stream client
+│   ├── ship_repository.py # Database persistence
+│   ├── db_pool.py         # Database connection pool
+│   └── main.py            # Entry point
+├── init_postgres/         # SQL scripts
+│   ├── init_postgres.sql  # Database initialization
+│   └── migrate_*.sql     # Migrations
+├── test/                  # Tests and experiments
 │   └── jupyter.ipynb     # Jupyter notebook
-├── config.py             # Конфигурация
-├── docker-compose.yaml   # Docker Compose конфигурация
-├── Dockerfile            # Docker образ
-└── requirements.txt      # Python зависимости
+├── config.py             # Configuration
+├── docker-compose.yaml   # Docker Compose configuration
+├── Dockerfile            # Docker image
+└── requirements.txt      # Python dependencies
 ```
 
-## 🔍 Проверка работы
+## 🔍 Verification
 
-### Проверка collector
+### Checking collector
 
 ```bash
 docker logs ship-tracer-collector -f
 ```
 
-Должны видеть статистику:
+You should see statistics:
 ```
 15:30:36 | 12 msg/s | Total: 105 | Known ships: 13
 ```
 
-### Проверка API
+### Checking API
 
 ```bash
 docker logs ship-tracer-api -f
 ```
 
-### Проверка данных в БД
+### Checking database data
 
-1. Откройте pgAdmin: http://localhost:5050
-2. Войдите с учетными данными из `.env`
-3. Добавьте сервер:
+1. Open pgAdmin: http://localhost:5050
+2. Log in with credentials from `.env`
+3. Add server:
    - Host: `postgres`
    - Port: `5432`
    - Database: `shiptracer`
    - Username: `postgres`
-   - Password: из `.env`
-4. Проверьте таблицу `ship_positions_current`
+   - Password: from `.env`
+4. Check the `ship_positions_current` table
 
-### Настройка Superset для дашбордов
+### Setting up Superset for dashboards
 
-Подключение к PostgreSQL настраивается автоматически при первом запуске через скрипт `scripts/setup_superset_db.py`.
+PostgreSQL connection is automatically configured on first startup via the `scripts/setup_superset_db.py` script.
 
-**Автоматическая настройка (рекомендуется):**
+**Automatic setup (recommended):**
 
-1. **ВАЖНО:** Пересоберите образ Superset с драйвером PostgreSQL:
+1. **IMPORTANT:** Rebuild the Superset image with PostgreSQL driver:
    ```bash
    docker-compose build superset
    ```
 
-2. Убедитесь, что все сервисы запущены:
+2. Make sure all services are running:
    ```bash
    docker-compose up -d
    ```
 
-3. Дождитесь инициализации Superset (около 30-60 секунд):
+3. Wait for Superset initialization (about 30-60 seconds):
    ```bash
    docker logs ship-tracer-superset-init -f
    ```
 
-4. Должно появиться сообщение:
+4. You should see the message:
    ```
-   ✅ Подключение к БД успешно создано
+   ✅ Database connection successfully created
    ```
 
-**Ручная настройка (если автоматическая не сработала):**
+**Manual setup (if automatic setup didn't work):**
 
-**Вариант 1: Запуск скрипта вручную**
+**Option 1: Run script manually**
 
 ```bash
-# Убедитесь, что Superset запущен
+# Make sure Superset is running
 docker-compose up -d superset
 
-# Подождите 30-60 секунд для инициализации, затем запустите скрипт
+# Wait 30-60 seconds for initialization, then run the script
 docker-compose run --rm superset-init python3.11 /app/scripts/setup_superset_db.py
 ```
 
-Или локально (если установлен Python и requests):
+Or locally (if Python and requests are installed):
 ```bash
 export SUPERSET_URL=http://localhost:8088
 export SUPERSET_USERNAME=admin
@@ -228,31 +228,31 @@ export POSTGRES_DB=shiptracer
 python3 scripts/setup_superset_db.py
 ```
 
-**Вариант 2: Настройка через веб-интерфейс**
+**Option 2: Setup via web interface**
 
-1. Откройте Superset: http://localhost:8088
-2. Войдите:
+1. Open Superset: http://localhost:8088
+2. Log in:
    - Username: `admin`
    - Password: `admin`
-3. Перейдите в **Settings** → **Database Connections** → **+ Database**
-4. **ВАЖНО:** Используйте вкладку **"Connect a database"** → выберите **"PostgreSQL"**
-5. Заполните форму:
+3. Go to **Settings** → **Database Connections** → **+ Database**
+4. **IMPORTANT:** Use the **"Connect a database"** tab → select **"PostgreSQL"**
+5. Fill in the form:
    - **Display Name:** `Ship Tracker PostgreSQL`
    - **SQLAlchemy URI:** `postgresql://postgres:postgres@postgres:5432/shiptracer`
-     (замените `postgres:postgres` на `ваш_username:ваш_пароль` из `.env`, если отличается)
-   - **ВАЖНО:** Используйте `postgres:5432` (имя сервиса Docker), а НЕ `localhost:5433`!
-   - Нажмите **Test Connection** → если успешно, нажмите **Connect**
+     (replace `postgres:postgres` with `your_username:your_password` from `.env` if different)
+   - **IMPORTANT:** Use `postgres:5432` (Docker service name), NOT `localhost:5433`!
+   - Click **Test Connection** → if successful, click **Connect**
 
-**Если форма с отдельными полями (Host, Port) не работает:**
-- Используйте **только SQLAlchemy URI** в формате: `postgresql://username:password@host:port/database`
-- Для Docker используйте имя сервиса `postgres` вместо `localhost`
-- Порт внутри Docker сети: `5432` (не `5433`!)
+**If the form with separate fields (Host, Port) doesn't work:**
+- Use **only SQLAlchemy URI** in the format: `postgresql://username:password@host:port/database`
+- For Docker, use the service name `postgres` instead of `localhost`
+- Port inside Docker network: `5432` (not `5433`!)
 
-**Создание дашборда:**
+**Creating a dashboard:**
 
-1. После подключения к БД перейдите в **SQL Lab** → **SQL Editor**
-2. Выберите базу данных `Ship Tracker PostgreSQL`
-3. Создайте запрос для получения данных:
+1. After connecting to the database, go to **SQL Lab** → **SQL Editor**
+2. Select the `Ship Tracker PostgreSQL` database
+3. Create a query to retrieve data:
    ```sql
    SELECT 
        ship_id,
@@ -267,23 +267,23 @@ python3 scripts/setup_superset_db.py
    ORDER BY updated_at DESC
    LIMIT 100;
    ```
-4. Нажмите **Run** для проверки
-5. Нажмите **Explore** → **Save** для создания визуализации
-6. Создайте дашборд и добавьте визуализации:
-   - **Table** — список кораблей
-   - **Map** — карта с позициями (если доступно)
-   - **Chart** — графики скорости, курса и т.д.
+4. Click **Run** to verify
+5. Click **Explore** → **Save** to create a visualization
+6. Create a dashboard and add visualizations:
+   - **Table** — list of ships
+   - **Map** — map with positions (if available)
+   - **Chart** — speed, course graphs, etc.
 
-**Примеры запросов для дашбордов:**
+**Example queries for dashboards:**
 
-- Количество активных кораблей:
+- Number of active ships:
   ```sql
   SELECT COUNT(*) as active_ships
   FROM ship_positions_current
   WHERE updated_at > NOW() - INTERVAL '1 hour';
   ```
 
-- Средняя скорость по кораблям:
+- Average speed by ship:
   ```sql
   SELECT 
       ship_id,
@@ -295,7 +295,7 @@ python3 scripts/setup_superset_db.py
   ORDER BY avg_speed DESC;
   ```
 
-- История позиций за последний час:
+- Position history for the last hour:
   ```sql
   SELECT 
       ship_id,
@@ -307,74 +307,74 @@ python3 scripts/setup_superset_db.py
   ORDER BY timestamp DESC;
   ```
 
-## 🐛 Устранение неполадок
+## 🐛 Troubleshooting
 
-### Данные не появляются на карте
+### Data not appearing on the map
 
-1. Проверьте, что collector работает:
+1. Check that collector is running:
    ```bash
    docker ps | grep collector
    docker logs ship-tracer-collector
    ```
 
-2. Проверьте, что данные есть в БД через pgAdmin
+2. Check that data exists in the database via pgAdmin
 
-3. Проверьте логи API:
+3. Check API logs:
    ```bash
    docker logs ship-tracer-api
    ```
 
-### Ошибки подключения к БД
+### Database connection errors
 
-- Убедитесь, что PostgreSQL запущен: `docker ps | grep postgres`
-- Проверьте переменные окружения в `.env`
-- Внутри Docker используйте `postgres:5432`, снаружи `localhost:5433`
+- Make sure PostgreSQL is running: `docker ps | grep postgres`
+- Check environment variables in `.env`
+- Inside Docker use `postgres:5432`, outside use `localhost:5433`
 
-### WebSocket не подключается
+### WebSocket not connecting
 
-- Откройте консоль браузера (F12) и проверьте ошибки
-- Убедитесь, что порт 8000 не занят другим приложением
+- Open browser console (F12) and check for errors
+- Make sure port 8000 is not occupied by another application
 
-### Superset не подключается к БД
+### Superset not connecting to database
 
-**Ошибка "Could not load database driver: PostgresEngineSpec":**
+**Error "Could not load database driver: PostgresEngineSpec":**
 
-Это означает, что драйвер PostgreSQL не установлен в образе Superset. Решение:
+This means the PostgreSQL driver is not installed in the Superset image. Solution:
 
-1. Пересоберите образ Superset:
+1. Rebuild the Superset image:
    ```bash
    docker-compose build superset
    docker-compose up -d superset
    ```
 
-2. Дождитесь перезапуска (30-60 секунд) и попробуйте подключиться снова
+2. Wait for restart (30-60 seconds) and try connecting again
 
-**Другие проблемы:**
+**Other issues:**
 
-1. Проверьте логи инициализации:
+1. Check initialization logs:
    ```bash
    docker logs ship-tracer-superset-init
    ```
 
-2. Если автоматическая настройка не сработала, настройте вручную (см. раздел "Настройка Superset для дашбордов")
+2. If automatic setup didn't work, configure manually (see "Setting up Superset for dashboards" section)
 
-3. Убедитесь, что используете правильный SQLAlchemy URI:
+3. Make sure you're using the correct SQLAlchemy URI:
    ```
    postgresql://postgres:postgres@postgres:5432/shiptracer
    ```
-   (замените пароль на ваш из `.env`)
+   (replace password with yours from `.env`)
 
-4. Проверьте, что PostgreSQL доступен:
+4. Check that PostgreSQL is accessible:
    ```bash
    docker ps | grep postgres
    docker logs ship-tracer-postgres
    ```
 
-5. Убедитесь, что переменные окружения в `.env` корректны
+5. Make sure environment variables in `.env` are correct
 
-## 📈 Производительность
+## 📈 Performance
 
-- **Парсинг JSON:** orjson обеспечивает +20-50% скорости по сравнению со стандартным json
-- **Логирование:** асинхронное логирование (loguru) не блокирует основной поток
-- **Обновления:** real-time обновления каждую секунду без перезагрузки страницы
-- **БД:** асинхронные запросы через asyncpg для максимальной производительности
+- **JSON parsing:** orjson provides +20-50% speed compared to standard json
+- **Logging:** asynchronous logging (loguru) doesn't block the main thread
+- **Updates:** real-time updates every second without page reload
+- **Database:** asynchronous queries via asyncpg for maximum performance
