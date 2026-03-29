@@ -29,6 +29,8 @@ logger.add(
 async def connect_ais_stream():
     """Connect to AIS stream and process messages"""
     ship_names = {}
+    last_saved_positions = {}
+    last_saved_times = {}
     pool = await init_db_pool()
     msg_count = 0
     msg_count_interval = 0
@@ -104,7 +106,38 @@ async def connect_ais_stream():
                                 (f" | {info_str}" if info_str else "")
                             )
                         
-                        await save_ship_position(pool, pos, save_history=False)
+                        # Write only meaningful movement/changes to reduce DB load and latency.
+                        prev = last_saved_positions.get(mmsi)
+                        now_ts = datetime.now(timezone.utc)
+                        should_save = True
+                        save_history = False
+
+                        if prev is not None:
+                            moved = (
+                                abs(lat - prev["lat"]) >= 0.00005
+                                or abs(lon - prev["lon"]) >= 0.00005
+                            )
+                            speed_changed = abs((speed or 0.0) - prev["speed"]) >= 0.5
+                            course_changed = abs((course or 0.0) - prev["course"]) >= 5.0
+                            heading_changed = abs((heading or 0.0) - prev["heading"]) >= 5.0
+                            last_save_time = last_saved_times.get(mmsi, now_ts)
+                            too_old = (now_ts - last_save_time).total_seconds() >= 15
+
+                            should_save = moved or speed_changed or course_changed or heading_changed or too_old
+                            save_history = moved
+                        else:
+                            save_history = True
+
+                        if should_save:
+                            await save_ship_position(pool, pos, save_history=save_history)
+                            last_saved_positions[mmsi] = {
+                                "lat": lat,
+                                "lon": lon,
+                                "speed": speed or 0.0,
+                                "course": course or 0.0,
+                                "heading": heading or 0.0,
+                            }
+                            last_saved_times[mmsi] = now_ts
                             
                 except Exception as e:
                     logger.error(f"Message processing error: {e}")
