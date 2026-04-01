@@ -19,4 +19,7 @@ AIS_STREAM_URL = "wss://stream.aisstream.io/v0/stream"
 AIS_BOUNDING_BOXES = [[[-90, -180], [90, 180]]]
 
 AIS_LOG_STATS_INTERVAL = int(os.getenv("AIS_LOG_STATS_INTERVAL", "5"))
-AIS_LOG_DETAILED = os.getenv("AIS_LOG_DETAILED", "false").lower() == "true" 
+AIS_LOG_DETAILED = os.getenv("AIS_LOG_DETAILED", "false").lower() == "true"
+
+# Optional: OpenWeatherMap tile layers (precipitation / clouds on map)
+OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY", "")

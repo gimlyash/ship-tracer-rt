@@ -36,6 +36,7 @@ async def get_ship_positions(max_age_minutes: int = 30) -> List:
                 heading,
                 navigational_status,
                 rate_of_turn,
+                ship_type,
                 timestamp,
                 updated_at
             FROM ship_positions_current
@@ -45,6 +46,23 @@ async def get_ship_positions(max_age_minutes: int = 30) -> List:
         async with pool.acquire() as conn:
             rows = await conn.fetch(query)
         return rows
+
+
+async def get_ais_stations() -> List:
+    """Rows from ais_stations (base stations, AtoN). Empty if table missing."""
+    pool = await init_db_pool()
+    try:
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT mmsi, kind, name, latitude, longitude, type_code
+                FROM ais_stations
+                ORDER BY kind, mmsi
+                """
+            )
+        return rows
+    except Exception:
+        return []
 
 
 async def get_ship_trails(trail_minutes: int = 30, points_per_ship: int = 60) -> Dict[int, List[Dict]]:

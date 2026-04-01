@@ -17,15 +17,21 @@ async def upsert_ship_position(conn: asyncpg.Connection, ship_data: dict):
     
     navigational_status = ship_data.get('NavigationalStatus')
     rate_of_turn = ship_data.get('RateOfTurn')
+    ship_type = ship_data.get('ShipType')
+    if ship_type is not None:
+        try:
+            ship_type = int(ship_type)
+        except (TypeError, ValueError):
+            ship_type = None
     timestamp = datetime.now(timezone.utc)
-    
+
     upsert_query = """
         INSERT INTO ship_positions_current (
-            ship_id, latitude, longitude, course_over_ground, 
-            speed_over_ground, heading, navigational_status, 
-            rate_of_turn, timestamp, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        ON CONFLICT (ship_id) 
+            ship_id, latitude, longitude, course_over_ground,
+            speed_over_ground, heading, navigational_status,
+            rate_of_turn, ship_type, timestamp, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ON CONFLICT (ship_id)
         DO UPDATE SET
             latitude = EXCLUDED.latitude,
             longitude = EXCLUDED.longitude,
@@ -34,15 +40,16 @@ async def upsert_ship_position(conn: asyncpg.Connection, ship_data: dict):
             heading = EXCLUDED.heading,
             navigational_status = EXCLUDED.navigational_status,
             rate_of_turn = EXCLUDED.rate_of_turn,
+            ship_type = COALESCE(EXCLUDED.ship_type, ship_positions_current.ship_type),
             timestamp = EXCLUDED.timestamp,
             updated_at = EXCLUDED.updated_at
     """
-    
+
     await conn.execute(
         upsert_query,
         ship_id, latitude, longitude, course_over_ground,
         speed_over_ground, heading, navigational_status,
-        rate_of_turn, timestamp, timestamp
+        rate_of_turn, ship_type, timestamp, timestamp,
     )
 
 
@@ -61,21 +68,27 @@ async def insert_history_position(conn: asyncpg.Connection, ship_data: dict):
     
     navigational_status = ship_data.get('NavigationalStatus')
     rate_of_turn = ship_data.get('RateOfTurn')
+    ship_type = ship_data.get('ShipType')
+    if ship_type is not None:
+        try:
+            ship_type = int(ship_type)
+        except (TypeError, ValueError):
+            ship_type = None
     timestamp = datetime.now(timezone.utc)
-    
+
     insert_query = """
         INSERT INTO ship_positions_history (
             ship_id, latitude, longitude, course_over_ground,
             speed_over_ground, heading, navigational_status,
-            rate_of_turn, timestamp
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            rate_of_turn, ship_type, timestamp
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     """
-    
+
     await conn.execute(
         insert_query,
         ship_id, latitude, longitude, course_over_ground,
         speed_over_ground, heading, navigational_status,
-        rate_of_turn, timestamp
+        rate_of_turn, ship_type, timestamp,
     )
 
 

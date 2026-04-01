@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS ais_stations (
+    mmsi BIGINT PRIMARY KEY,
+    kind VARCHAR(32) NOT NULL,
+    name TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    type_code SMALLINT,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
